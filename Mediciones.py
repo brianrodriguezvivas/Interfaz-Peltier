@@ -12,6 +12,7 @@ def Resultados(IP_fuente="192.168.0.100",
     
     current = []
     voltage = []
+    temperature = []
     
     if Temperature == False :
         from prueba import voltage_current,Barrido_IV
@@ -35,17 +36,23 @@ def Resultados(IP_fuente="192.168.0.100",
             voltage.append(new_v)
             current.append(new_i)
             
+            
             #---------------Temperatura-------------
             ADC.StartConversion(chanel) # Canal se sensor
             while(ADC.HasStartupFinished()==False):
                 pass
-            [fault,temp]=ADC.ReadResults(chanel) 
+            [fault,temp]=ADC.ReadResults(chanel)
+            temperature.append(temp) 
             print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
             #---------------------------------------
         
         inst.write('smua.source.output = smua.OUTPUT_OFF') # Apagar salida de la fuente
         inst.close()
-        return pd.DataFrame({'Voltage': voltage, 'Current': current}),measurement_voltage_Voc
+        potencia = np.array(voltage)*np.array(current)
+        return (pd.DataFrame({'Voltage': voltage, 'Current': current}),
+                measurement_voltage_Voc,
+                pd.DataFrame({'Voltage': voltage,'Power': potencia}),
+                pd.DataFrame({'Voltage': voltage,'Temperature': temperature }),)
     
     
     elif measurement_voltage_Voc <= 2 and Temperature == False:
@@ -61,5 +68,8 @@ def Resultados(IP_fuente="192.168.0.100",
         
         inst.write('smua.source.output = smua.OUTPUT_OFF') # Apagar salida de la fuente
         inst.close()
-        return pd.DataFrame({'Voltage': voltage, 'Current': current}),measurement_voltage_Voc
+        potencia = np.array(voltage)*np.array(current)
+        return (pd.DataFrame({'Voltage': voltage, 'Current': current}),
+                measurement_voltage_Voc,
+                pd.DataFrame({'Voltage': voltage,'Power': potencia}))
     

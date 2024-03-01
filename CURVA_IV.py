@@ -63,7 +63,7 @@ inst.write('smua.source.limiti =' + str(lim_I))
 if measurement_voltage_Voc <= 2:
     # Habilitamos la salida de la fuente
     inst.write("smua.source.output = smua.OUTPUT_ON")
-    print('---------------------------Iniciando medidas----------------------------------------')
+
     v = np.linspace(0,measurement_voltage_Voc,6) 
     current = []
     voltage = []

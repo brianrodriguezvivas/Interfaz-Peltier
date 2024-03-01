@@ -66,9 +66,6 @@ def Poner_Fuente_Voltaje(inst, voltaje):
 def Barrido_IV(inst, V,voltaje_final):
     
         # Habilitamos la salida de la fuente
-        print('---------------------------Iniciando medidas----------------------------------------')
-
-
         
         inst.write("smua.source.levelv = " + str(V))
         tm.sleep(4)

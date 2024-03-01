@@ -243,12 +243,12 @@ def sensor_measurement(n_measurements,chanel):
     return  ADC
     
     #Convert and read channel 8
-    for i in range (n_measurements):
-        ADC.StartConversion(chanel) # Canal se sensor
-        while(ADC.HasStartupFinished()==False):
-            pass
-        [fault,temp]=ADC.ReadResults(chanel) 
-        print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
+    # for i in range (n_measurements):
+    #     ADC.StartConversion(chanel) # Canal se sensor
+    #     while(ADC.HasStartupFinished()==False):
+    #         pass
+    #     [fault,temp]=ADC.ReadResults(chanel) 
+    #     print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
         
 
 
