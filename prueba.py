@@ -68,7 +68,7 @@ def Barrido_IV(inst, V,voltaje_final):
         # Habilitamos la salida de la fuente
         
         inst.write("smua.source.levelv = " + str(V))
-        tm.sleep(4)
+        # tm.sleep(0.01)
     
         inst.write('print(smua.measure.v())')
         measurement_voltage = float(inst.read())
@@ -84,35 +84,35 @@ def Barrido_IV(inst, V,voltaje_final):
         return voltage, current
     
 # ####################### A borrar ############################
-def Barrido_IV_(inst, voltaje_inicial, voltaje_final, num_puntos):
-    if voltaje_final <= 2:
-        # Habilitamos la salida de la fuente
-        inst.write("smua.source.output = smua.OUTPUT_ON")
-        print('---------------------------Iniciando medidas----------------------------------------')
-        v = np.linspace(voltaje_inicial,voltaje_final,num_puntos) 
-        current = []
-        voltage = []
-        for element in v:
-            inst.write("smua.source.levelv = " + str(element))
-            tm.sleep(4)
+# def Barrido_IV_(inst, voltaje_inicial, voltaje_final, num_puntos):
+#     if voltaje_final <= 2:
+#         # Habilitamos la salida de la fuente
+#         inst.write("smua.source.output = smua.OUTPUT_ON")
+#         print('---------------------------Iniciando medidas----------------------------------------')
+#         v = np.linspace(voltaje_inicial,voltaje_final,num_puntos) 
+#         current = []
+#         voltage = []
+#         for element in v:
+#             inst.write("smua.source.levelv = " + str(element))
+#             tm.sleep(4)
         
-            inst.write('print(smua.measure.v())')
-            measurement_voltage = float(inst.read())
-            voltage.append(measurement_voltage)
+#             inst.write('print(smua.measure.v())')
+#             measurement_voltage = float(inst.read())
+#             voltage.append(measurement_voltage)
     
-            inst.write('print(smua.measure.i())')
-            measurement_current = float(inst.read())
-            current.append(-1* measurement_current)
-            print('[Voltage, Current] = ', [measurement_voltage, measurement_current])
-            print('-----------------------------------------------------------------')
-        inst.write('smua.source.output = smua.OUTPUT_OFF') # Apagar salida de la fuente
+#             inst.write('print(smua.measure.i())')
+#             measurement_current = float(inst.read())
+#             current.append(-1* measurement_current)
+#             print('[Voltage, Current] = ', [measurement_voltage, measurement_current])
+#             print('-----------------------------------------------------------------')
+#         inst.write('smua.source.output = smua.OUTPUT_OFF') # Apagar salida de la fuente
 
-        return pd.DataFrame({'Voltage': voltage, 'Current': current})
-
-
+#         return pd.DataFrame({'Voltage': voltage, 'Current': current})
 
 
-def voltage_current(IP_fuente="192.168.0.100",
+
+
+def voltage_current(IP_fuente,
                     voltaje_inicial=0,
                     num_puntos=6):
     
@@ -124,7 +124,7 @@ def voltage_current(IP_fuente="192.168.0.100",
     return inst,measurement_voltage_Voc
 
 
-voltage_current()
+
 
 
 
@@ -155,7 +155,4 @@ voltage_current()
 #     inst.close()
     
 #     return pd.DataFrame({'Voltage': voltage, 'Current': current}),measurement_voltage_Voc
-
-
-
 

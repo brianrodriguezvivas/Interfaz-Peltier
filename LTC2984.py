@@ -227,7 +227,7 @@ class LTC2984:
     
     
     
-def sensor_measurement(n_measurements,chanel):
+def sensor_measurement():
     # in : numero de medidas, canal del sensor
     import time
     ADC=LTC2984()
