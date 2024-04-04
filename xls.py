@@ -1,10 +1,9 @@
 # Importar bibliotecas y módulos necesarios
-from dash import Dash, dcc, html, Input, Output, callback, Patch, clientside_callback,State
+from dash import Dash, dcc, html, Input, Output, callback, Patch, clientside_callback,State,dash_table
 import plotly.express as px
 import plotly.io as pio
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
-# import dash_ag_grid as dag
 import pandas as pd
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -124,7 +123,7 @@ def Botones(nombre):
 
 #------------------------------Función para graficar -----------------------------
 
-def graficar(titulo, lista_dataframes, xmedida="U", ymedida="U", xtitle="x", ytitle="y"):
+def graficar(titulo, lista_dataframes, xmedida="U", ymedida="U", xtitle="x", ytitle="y",n_clikcs=""):
     """
     Genera un gráfico de dispersión con líneas y marcadores a partir de una lista de DataFrames.
 
@@ -148,7 +147,7 @@ def graficar(titulo, lista_dataframes, xmedida="U", ymedida="U", xtitle="x", yti
         
         fig.add_scatter(x=df[f"{df.columns[0]}"], y=df[f"{df.columns[1]}"], 
                         mode='lines+markers', 
-                        name=f'{titulo}',
+                        name=f'{titulo} {n_clikcs}',
                         marker=dict(symbol='circle-open', 
                         size=10, 
                         line=dict(color='black', width=2),),
@@ -189,6 +188,7 @@ lista_VOC = [html.H5("Medidas: "),html.Hr()]
 lista_df_Voltage_Power= [pd.DataFrame()] #Lista de DataFrames Voltage-Power
 G1 = pd.DataFrame()
 IP_list = ["192.168.0.100"]
+N_points = [20]
 chanel_selection_V_C = [15]
 chanel_selection_temperature = [15]
 list_sensor_V_C = [False]
@@ -563,9 +563,27 @@ def medir_callback(n_clicks):
     print(chanel_selection_V_C,"a")
     chanel_selec_V_C = chanel_selection_V_C[0]
     
-    valores = Resultados(IP=IP_list[-1],Temperature =temperature_selection,
+    valores = Resultados(IP=IP_list[-1],Temperature =temperature_selection,num_puntos=N_points[-1],
                         Fuente=fuente_selection ,Sensor_V_C=sensor_V_C_selection,
                         chanel_temperature=chanel_selec_temperature)
+    #-------------------------------------------------------------------------------
+    def rename_columns(df_, n_clicks):
+        """
+        Renombra las columnas de un DataFrame.
+
+        Parámetros:
+        - df_: DataFrame: El DataFrame al que se le van a renombrar las columnas.
+        - n_clicks: int: El número de clics que se ha realizado.
+
+        Retorna:
+        - DataFrame: El DataFrame con las columnas renombradas.
+        """
+        df_ = df_.rename(columns={
+                            df_.columns[0]: f'{df_.columns[0]}_{n_clicks}',
+                            df_.columns[1]: f'{df_.columns[1]}_{n_clicks}'})
+        return df_
+    
+    #-------------------------------------------------------------------------------
     
     if  len(valores) == 0:
         return dash.no_update, dash.no_update, dash.no_update, lista_VOC,False
@@ -573,20 +591,18 @@ def medir_callback(n_clicks):
         
         df_voltage_current,measurement_voltage_Voc,df_voltage_power,elemento = valores
         
-        df_voltage_current = df_voltage_current.rename(columns={
-                                df_voltage_current.columns[0]: f'{df_voltage_current.columns[0]}_{n_clicks}',
-                                df_voltage_current.columns[1]: f'{df_voltage_current.columns[1]}_{n_clicks}'})
+        df_voltage_current = rename_columns(df_voltage_current, n_clicks)
         
         list_df_Voltage_Current.append(df_voltage_current)
         lista_df_Voltage_Power.append(df_voltage_power)
         
         fig = graficar("Curva V_I TEC-12706",list_df_Voltage_Current,
                     xmedida="[V]",ymedida="[A]",
-                    xtitle="Voltage",ytitle="Current")
+                    xtitle="Voltage",ytitle="Current",n_clikcs=n_clicks)
         
         fig3 = graficar("Voltage vs Power",lista_df_Voltage_Power,
                         xmedida="[V]",ymedida="[W]",
-                        xtitle="Voltage", ytitle="Power")
+                        xtitle="Voltage", ytitle="Power",n_clikcs=n_clicks)
         fig2 = dash.no_update
         
         print(type(measurement_voltage_Voc))
@@ -600,40 +616,36 @@ def medir_callback(n_clicks):
     
     elif valores[-1] == "F_T":
         df_voltage_current,measurement_voltage_Voc,df_voltage_power,df_temperature_voltage,elemento = valores
-        df_temperature_voltage = df_temperature_voltage.rename(columns={
-                                    df_temperature_voltage.columns[0]: f'{df_temperature_voltage.columns[0]}_{n_clicks}',
-                                    df_temperature_voltage.columns[1]: f'{df_temperature_voltage.columns[1]}_{n_clicks}'})
+
+        df_temperature_voltage = rename_columns(df_temperature_voltage, n_clicks)
+        df_voltage_current = rename_columns(df_voltage_current, n_clicks)
+        df_voltage_power = rename_columns(df_voltage_power, n_clicks)
         
         
-        df_voltage_current = df_voltage_current.rename(columns={
-                                df_voltage_current.columns[0]: f'{df_voltage_current.columns[0]}_{n_clicks}',
-                                df_voltage_current.columns[1]: f'{df_voltage_current.columns[1]}_{n_clicks}'})
         
         list_df_Voltage_Current.append(df_voltage_current)
         list_df_Temperature_Voltage.append(df_temperature_voltage)
         lista_df_Voltage_Power.append(df_voltage_power)
         
-        fig = graficar("Curva V_I TEC-12706",list_df_Voltage_Current,xmedida="[V]",ymedida="[A]")
-        fig2 = graficar("Voltaje vs Temperatura",list_df_Temperature_Voltage,xmedida="[V]",ymedida="[°C]")
-        fig3 = graficar("Voltaje vs Potencia",lista_df_Voltage_Power,xmedida="[V]",ymedida="[W]")
+        fig = graficar("Curva V_I TEC-12706",list_df_Voltage_Current,
+                        xmedida="[V]",ymedida="[A]",
+                        xtitle="Voltage",ytitle="Current",n_clikcs=n_clicks)
+        fig2 = graficar("Voltaje vs Temperatura",list_df_Temperature_Voltage,
+                        xmedida="[V]",ymedida="[°C]",
+                        xtitle="Voltage",ytitle="Temperature",n_clikcs=n_clicks)
+        fig3 = graficar("Voltaje vs Potencia",lista_df_Voltage_Power,
+                        xmedida="[V]",ymedida="[W]",
+                        xtitle="Voltage",ytitle="Power",n_clikcs=n_clicks)
 
         
         Ag_temp_proom = list_df_Temperature_Voltage[-1]
         Prom_Temp = Ag_temp_proom[Ag_temp_proom.columns[1]].astype(float).mean()
-        lista_VOC.append(html.Small(f"VOC: {measurement_voltage_Voc} [V] T: {round(Prom_Temp,3)} [ºC]"))
+        lista_VOC.append(html.Small(f"VOC: {round(measurement_voltage_Voc,4)} [V] T: {round(Prom_Temp,3)} [ºC]"))
         lista_VOC.append(html.Br())
-        G1 = pd.concat(list_df_Voltage_Current,axis=1)
-
-    
-        return  fig, fig2, fig3, lista_VOC, False
-    
-
         
 
     
-    
-    
-
+        return  fig, fig2, fig3, lista_VOC, False
 
 #-----------------------------Callback de Descarga CSV----------------------------
 
@@ -655,7 +667,8 @@ def csv_callback(btn_csv):
     Retorna:
         - data (dict): Un CSV que contiene los datos del archivo a descargar.
     """
-    df = pd.concat(list_df_Voltage_Current, axis=1)
+    df = pd.concat(list_df_Voltage_Current,list_df_Temperature_Voltage,lista_df_Voltage_Power, axis=1)
+    
     
     if not btn_csv:
         raise Dash.exceptions.PreventUpdate
@@ -664,16 +677,30 @@ def csv_callback(btn_csv):
 
 
 
-# ------------------------Entrada de texto y salida de texto IP -------------------------
+# ------------------------Entrada de texto y salida de texto IP, Puntos -------------------------
 
 
 default_ip = "192.168.0.100"
+default_points = 20
 
 # Crea el diseño de la aplicación
-text_input= html.Div(
+text_input_ip= html.Div(
     [   
         dbc.Input(id="IP", placeholder=default_ip, type="text", value=default_ip),
         html.Br(),   
+    ], style={'margin-down': "2px"}
+)
+
+text_input_points = html.Div(
+    [   dbc.Row([
+                dbc.Col([
+                    dbc.Label("Número de puntos", style={'font-size': '20px'}),
+                ],width=7),
+                dbc.Col([
+                    dbc.Input(id="points", placeholder=default_points, type="number", value=default_points,
+                    style={'width': '100px', 'font-size': '15px'}),
+                ],width=5),
+    ],align="center"),
     ], style={'margin-down': "0px"}
 )
 
@@ -684,7 +711,7 @@ IP_layout = html.Div([
 
 # Controles generales incluyendo desplegable, lista de verificación y control deslizante
 controls_fuente = dbc.Card(
-    [IP_layout,text_input,NO_cheklist1],
+    [IP_layout,text_input_ip,NO_cheklist1,text_input_points],
     body=True,
 )
 
@@ -694,24 +721,22 @@ NO_output = html.Div(id="NO_output")
             prevent_initial_call=True,
             
             )
-
-
 def input_IP(IP):
     IP_list.append(IP)
     return ''
 
 
-#-----------------------------Configuración de la cuadrícula AG para mostrar datos-------------
+NO_output_points = html.Div(id="NO_output_points")
+@app.callback(Output("NO_output_points", "children"),
+            [Input("points", "value")],
+            prevent_initial_call=True,
+            
+            )
+def input_points(points):
+    N_points.append(points)
+    return ''
 
 
-# cuadricula= dag.AgGrid(
-#         id="grid",
-#         columnDefs=[{"field": i} for i in G1.columns],
-#         rowData=G1.to_dict("records"),
-#         defaultColDef={"flex": 1, "minWidth": 120, "sortable": True, "resizable": True, "filter": True},
-#         dashGridOptions={"rowSelection":"multiple"},    
-
-#)
 
 #-----------------------------Callback de Reinicio----------------------------
 
@@ -793,7 +818,7 @@ app.layout = dbc.Container([
     dbc.Row([
         # Primer columna
         dbc.Col([
-            dbc.Row([controls_fuente, NO_output], style={"padding": "0px 5px 10px 10px"}),
+            dbc.Row([controls_fuente, NO_output,NO_output_points], style={"padding": "0px 5px 10px 10px"}),
             dbc.Row([alerta_medidas], style={"padding": "5px 5px 0px 10px"}),  # Ajuste de relleno aquí
             # dbc.Row([
             #     # Contenido de la fila

@@ -138,7 +138,7 @@ def voltage_current(IP_fuente,
 #     voltage = []
     
 #     inst = Conectar_Fuente(IP_fuente)
-#     measurement_voltage_Voc = Obtener_Voc(inst)
+#     measurement_voltage_Voc = Obtener_Voc(inst)ºº
 #     Poner_Fuente_Voltaje(inst, 0)
 #     if measurement_voltage_Voc <= 2:
 #         inst.write("smua.source.output = smua.OUTPUT_ON")

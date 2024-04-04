@@ -4,12 +4,12 @@ import pandas as pd
 import pyvisa as visa 
 
 def Resultados(IP="192.168.0.100",
-                    voltaje_inicial=0,
-                    num_puntos=20,
-                    Temperature = False,
-                    Fuente = False,
-                    Sensor_V_C = False,
-                    chanel_temperature=[15]):
+                voltaje_inicial=0,
+                num_puntos=20,
+                Temperature = False,
+                Fuente = False,
+                Sensor_V_C = False,
+                chanel_temperature=[15]):
     
     
     current = []
@@ -33,16 +33,6 @@ def Resultados(IP="192.168.0.100",
 
             v = np.linspace(voltaje_inicial,measurement_voltage_Voc,num_puntos)
             Temperature_prom = []
-#---------------------------------------Temperatura inicial ----------------------------------------           
-            for chanel in chanel_temperature:
-
-                ADC.StartConversion(chanel)
-
-                while(ADC.HasStartupFinished()==False):
-                    pass
-                [fault,temp]=ADC.ReadResults(chanel)
-                Temperature_prom.append(temp) 
-                print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
 #--------------------------------------------------------------------------------------------------
 
             for element in range(len(v)):
@@ -51,20 +41,17 @@ def Resultados(IP="192.168.0.100",
                 current.append(new_i)
                 
 #---------------------------------------Temperatura final ------------------------------------------           
-            for chanel in chanel_temperature:
+                for chanel in chanel_temperature:
 
-                ADC.StartConversion(chanel)
+                    ADC.StartConversion(chanel)
 
-                while(ADC.HasStartupFinished()==False):
-                    pass
-                [fault,temp]=ADC.ReadResults(chanel)
-                Temperature_prom.append(temp) 
-                print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
-#-----------------------------------Temperatura Promedio--------------------------------------------
+                    while(ADC.HasStartupFinished()==False):
+                        pass
+                    [fault,temp]=ADC.ReadResults(chanel)
+                    Temperature_prom.append(temp) 
+                    print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
 
-
-                
-            temperature.append(np.mean(np.array(Temperature_prom)))
+                    temperature.append(round(np.mean(np.array(Temperature_prom))),4)
 
 #---------------------------------------------------------------------------------------------------
                 
