@@ -15,6 +15,8 @@ def Resultados(IP="192.168.0.100",
     current = []
     voltage = []
     temperature = []
+    temperature_1 = []
+    temperature_2 = []
 
 
     #Aqui va la fuente encendida 
@@ -32,7 +34,7 @@ def Resultados(IP="192.168.0.100",
             print('---------------------------Iniciando medidas----------------------------------------')
 
             v = np.linspace(voltaje_inicial,measurement_voltage_Voc,num_puntos)
-            Temperature_prom = []
+            
 #--------------------------------------------------------------------------------------------------
 
             for element in range(len(v)):
@@ -41,6 +43,9 @@ def Resultados(IP="192.168.0.100",
                 current.append(new_i)
                 
 #---------------------------------------Temperatura final ------------------------------------------           
+                Temperature_prom = []
+                chanels = []
+
                 for chanel in chanel_temperature:
 
                     ADC.StartConversion(chanel)
@@ -48,14 +53,20 @@ def Resultados(IP="192.168.0.100",
                     while(ADC.HasStartupFinished()==False):
                         pass
                     [fault,temp]=ADC.ReadResults(chanel)
-                    Temperature_prom.append(temp) 
-                    print(f"Channel {chanel}: "+str(temp)+" fault "+str(fault))
+                    Temperature_prom.append(temp)
+                    chanels.append(chanel)
+                temperature_1.append(Temperature_prom[0])
+                temperature_2.append(Temperature_prom[1])
+                    
+                temperature.append(abs(Temperature_prom[0]-Temperature_prom[1]))  #Delta T
+                print(f"Channel {chanels[0]}: "+str(Temperature_prom[0])+" fault "+str(fault))
+                print(f"Channel {chanels[1]}: "+str(Temperature_prom[1])+" fault "+str(fault))
+                print(f"ΔT {temperature[-1]}:")
+                
 
-                    temperature.append(round(np.mean(np.array(Temperature_prom))),4)
+                    
 
 #---------------------------------------------------------------------------------------------------
-                
-            
             
             inst.write('smua.source.output = smua.OUTPUT_OFF') # Apagar salida de la fuente
             inst.close()
@@ -63,7 +74,9 @@ def Resultados(IP="192.168.0.100",
             return (pd.DataFrame({'Voltage': voltage, 'Current': current}),
                     measurement_voltage_Voc,
                     pd.DataFrame({'Voltage': voltage,'Power': potencia}),
-                    pd.DataFrame({'Voltage': voltage,'Temperature': temperature }),"F_T")
+                    pd.DataFrame({'Voltage': voltage,'ΔTemperature': temperature }),
+                    pd.DataFrame({'Temperature_1': temperature_1,'Temperature_2': temperature_2 }),
+                    "F_T",)
     
     elif Fuente == True and Temperature == False and Sensor_V_C == False: 
         

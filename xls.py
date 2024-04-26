@@ -123,7 +123,7 @@ def Botones(nombre):
 
 #------------------------------Función para graficar -----------------------------
 
-def graficar(titulo, lista_dataframes, xmedida="U", ymedida="U", xtitle="x", ytitle="y",n_clikcs=""):
+def graficar(titulo, lista_dataframes, xmedida="U", ymedida="U", xtitle="x", ytitle="y",n_presionado=""):
     """
     Genera un gráfico de dispersión con líneas y marcadores a partir de una lista de DataFrames.
 
@@ -147,7 +147,7 @@ def graficar(titulo, lista_dataframes, xmedida="U", ymedida="U", xtitle="x", yti
         
         fig.add_scatter(x=df[f"{df.columns[0]}"], y=df[f"{df.columns[1]}"], 
                         mode='lines+markers', 
-                        name=f'{titulo} {n_clikcs}',
+                        name=f'{titulo} {i}',
                         marker=dict(symbol='circle-open', 
                         size=10, 
                         line=dict(color='black', width=2),),
@@ -183,9 +183,10 @@ Botones_V_C = Botones("V-C") #Botones para medir Voltaje-Corriente
 
 #-------------------------------Listas------------------------------------
 list_df_Voltage_Current = [pd.DataFrame()] #Lista de DataFrames Voltage-Current
-list_df_Temperature_Voltage = [pd.DataFrame()] #Lista de DataFrames Temperature-Voltage
+list_df_Temperature_Voltage = [pd.DataFrame()] #Lista de DataFrames delta Temperature-Voltage
 lista_VOC = [html.H5("Medidas: "),html.Hr()]
 lista_df_Voltage_Power= [pd.DataFrame()] #Lista de DataFrames Voltage-Power
+lista_temperaturas = [pd.DataFrame()] #Lista de DataFrames Temperaturas
 G1 = pd.DataFrame()
 IP_list = ["192.168.0.100"]
 N_points = [20]
@@ -194,6 +195,7 @@ chanel_selection_temperature = [15]
 list_sensor_V_C = [False]
 list_sensor_temperature = [False]
 list_fuente = [False]
+n_medir_presionado = 0
 
 
 
@@ -554,7 +556,10 @@ def medir_callback(n_clicks):
     - lista_VOC (lista de str): La lista de valores de VOC.
     - False (bool): Indica si la alerta de carga está abierta o no.
     """
+    global n_medir_presionado
     ############################################################
+    n_medir_presionado += 1
+    
     temperature_selection = list_sensor_temperature[0] 
     sensor_V_C_selection = list_sensor_V_C[0]
     fuente_selection = list_fuente[0]
@@ -579,8 +584,8 @@ def medir_callback(n_clicks):
         - DataFrame: El DataFrame con las columnas renombradas.
         """
         df_ = df_.rename(columns={
-                            df_.columns[0]: f'{df_.columns[0]}_{n_clicks}',
-                            df_.columns[1]: f'{df_.columns[1]}_{n_clicks}'})
+                            df_.columns[0]: f'{df_.columns[0]}_n{n_clicks}',
+                            df_.columns[1]: f'{df_.columns[1]}_n{n_clicks}'})
         return df_
     
     #-------------------------------------------------------------------------------
@@ -591,18 +596,18 @@ def medir_callback(n_clicks):
         
         df_voltage_current,measurement_voltage_Voc,df_voltage_power,elemento = valores
         
-        df_voltage_current = rename_columns(df_voltage_current, n_clicks)
+        df_voltage_current = rename_columns(df_voltage_current, n_medir_presionado)
         
         list_df_Voltage_Current.append(df_voltage_current)
         lista_df_Voltage_Power.append(df_voltage_power)
         
         fig = graficar("Curva V_I TEC-12706",list_df_Voltage_Current,
                     xmedida="[V]",ymedida="[A]",
-                    xtitle="Voltage",ytitle="Current",n_clikcs=n_clicks)
+                    xtitle="Voltage",ytitle="Current",n_presionado=n_medir_presionado)
         
         fig3 = graficar("Voltage vs Power",lista_df_Voltage_Power,
                         xmedida="[V]",ymedida="[W]",
-                        xtitle="Voltage", ytitle="Power",n_clikcs=n_clicks)
+                        xtitle="Voltage", ytitle="Power",n_presionado =n_medir_presionado)
         fig2 = dash.no_update
         
         print(type(measurement_voltage_Voc))
@@ -615,32 +620,34 @@ def medir_callback(n_clicks):
         return  fig, fig2, fig3, lista_VOC, False
     
     elif valores[-1] == "F_T":
-        df_voltage_current,measurement_voltage_Voc,df_voltage_power,df_temperature_voltage,elemento = valores
+        df_voltage_current,measurement_voltage_Voc,df_voltage_power,df_temperature_voltage,Temperaturas,elemento = valores
 
-        df_temperature_voltage = rename_columns(df_temperature_voltage, n_clicks)
-        df_voltage_current = rename_columns(df_voltage_current, n_clicks)
-        df_voltage_power = rename_columns(df_voltage_power, n_clicks)
+        df_temperature_voltage = rename_columns(df_temperature_voltage, n_medir_presionado)
+        df_voltage_current = rename_columns(df_voltage_current, n_medir_presionado)
+        df_voltage_power = rename_columns(df_voltage_power, n_medir_presionado)
+        Temperaturas = rename_columns(Temperaturas, n_medir_presionado)
         
         
         
         list_df_Voltage_Current.append(df_voltage_current)
         list_df_Temperature_Voltage.append(df_temperature_voltage)
         lista_df_Voltage_Power.append(df_voltage_power)
+        lista_temperaturas.append(Temperaturas)
         
-        fig = graficar("Curva V_I TEC-12706",list_df_Voltage_Current,
+        fig = graficar("Voltaje vs Corriente",list_df_Voltage_Current,
                         xmedida="[V]",ymedida="[A]",
-                        xtitle="Voltage",ytitle="Current",n_clikcs=n_clicks)
-        fig2 = graficar("Voltaje vs Temperatura",list_df_Temperature_Voltage,
+                        xtitle="Voltage",ytitle="Current",n_presionado =n_clicks)
+        fig2 = graficar("Voltaje vs ΔTemperatura",list_df_Temperature_Voltage,
                         xmedida="[V]",ymedida="[°C]",
-                        xtitle="Voltage",ytitle="Temperature",n_clikcs=n_clicks)
+                        xtitle="Voltage",ytitle="Temperature",n_presionado =n_clicks)
         fig3 = graficar("Voltaje vs Potencia",lista_df_Voltage_Power,
                         xmedida="[V]",ymedida="[W]",
-                        xtitle="Voltage",ytitle="Power",n_clikcs=n_clicks)
+                        xtitle="Voltage",ytitle="Power",n_presionado =n_clicks)
 
         
         Ag_temp_proom = list_df_Temperature_Voltage[-1]
         Prom_Temp = Ag_temp_proom[Ag_temp_proom.columns[1]].astype(float).mean()
-        lista_VOC.append(html.Small(f"VOC: {round(measurement_voltage_Voc,4)} [V] T: {round(Prom_Temp,3)} [ºC]"))
+        lista_VOC.append(html.Small(f"{n_medir_presionado})  VOC: {round(measurement_voltage_Voc,4)} [V]   ΔT: {round(Prom_Temp,3)} [ºC]"))
         lista_VOC.append(html.Br())
         
 
@@ -667,7 +674,8 @@ def csv_callback(btn_csv):
     Retorna:
         - data (dict): Un CSV que contiene los datos del archivo a descargar.
     """
-    df = pd.concat(list_df_Voltage_Current,list_df_Temperature_Voltage,lista_df_Voltage_Power, axis=1)
+    lista_data = list_df_Voltage_Current + list_df_Temperature_Voltage+ lista_df_Voltage_Power+ lista_temperaturas
+    df = pd.concat(lista_data ,axis=1)
     
     
     if not btn_csv:
@@ -765,8 +773,12 @@ def reset(n_clicks):
     global list_df_Voltage_Current
     global list_df_Temperature_Voltage
     global lista_df_Voltage_Power
+    global lista_VOC
+    global lista_temperaturas
+    global n_medir_presionado
+    n_medir_presionado = 0
     
-    lista_VOC.clear()
+    lista_VOC = []
     lista_VOC.append(html.H5("Medidas: "))  # Limpiar lista de VOC
     lista_VOC.append( html.Hr())
     
@@ -777,7 +789,10 @@ def reset(n_clicks):
     list_df_Voltage_Current = [pd.DataFrame()]
     list_df_Temperature_Voltage = [pd.DataFrame()]
     lista_df_Voltage_Power = [pd.DataFrame()]
-    chanel_selection_list1 = []
+    
+    lista_VOC = [html.H5("Medidas: "),html.Hr()]
+    lista_temperaturas = [pd.DataFrame()] #Lista de DataFrames Temperaturas
+ 
     
     return fig, fig2, fig3, lista_VOC
 # ------------------------Pestañas con gráficos y cuadrícula AG-------------------------------
